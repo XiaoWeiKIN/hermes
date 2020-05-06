@@ -1,12 +1,10 @@
 package com.bolt.transport;
 
 import com.bolt.codec.Codec;
+import com.bolt.common.enums.ConnectionEventType;
+import com.bolt.config.*;
 import com.bolt.reomoting.AbstractLifeCycle;
 import com.bolt.common.Url;
-import com.bolt.config.BoltGenericOption;
-import com.bolt.config.BoltOption;
-import com.bolt.config.BoltOptions;
-import com.bolt.config.Configurable;
 import com.bolt.protocol.Protocol;
 import io.netty.channel.WriteBufferWaterMark;
 import org.slf4j.Logger;
@@ -25,6 +23,8 @@ public abstract class AbstractEndpoint extends AbstractLifeCycle implements Endp
     private Codec codec;
     private Protocol protocol;
     private volatile Url url;
+    private boolean serverSide;
+    private ConnectionEventListener connectionEventListener = new ConnectionEventListener();
 
     protected abstract void doOpen() throws Throwable;
 
@@ -35,7 +35,7 @@ public abstract class AbstractEndpoint extends AbstractLifeCycle implements Endp
     }
 
     public AbstractEndpoint(boolean serverSide, Codec codec, Protocol protocol) {
-        super(serverSide);
+        this.serverSide = serverSide;
         this.codec = codec;
         this.protocol = protocol;
     }
@@ -64,6 +64,12 @@ public abstract class AbstractEndpoint extends AbstractLifeCycle implements Endp
     }
 
     protected void setUrl(Url url) {
+        url.addParameters(options(BoltRemotingOption.class));
+        if (isServerSide()) {
+            url.addParameters(options(BoltServerOption.class));
+        } else {
+            url.addParameters(options(BoltClientOption.class));
+        }
         this.url = url;
     }
 
@@ -88,4 +94,16 @@ public abstract class AbstractEndpoint extends AbstractLifeCycle implements Endp
         return new WriteBufferWaterMark(lowWaterMark, highWaterMark);
     }
 
+    @Override
+    public boolean isServerSide() {
+        return serverSide;
+    }
+
+    public void addConnectionEventProcessor(ConnectionEventType type, ConnectionEventProcessor processor) {
+        connectionEventListener.addConnectionEventProcessor(type, processor);
+    }
+
+    protected ConnectionEventListener getConnectionEventListener() {
+        return connectionEventListener;
+    }
 }

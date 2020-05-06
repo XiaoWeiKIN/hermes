@@ -5,8 +5,11 @@ import com.bolt.common.command.RemotingCommand;
 import com.bolt.common.command.RequestCommand;
 import com.bolt.common.command.ResponseCommand;
 import com.bolt.common.exception.RemotingException;
+import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @Author: wangxw
@@ -16,38 +19,40 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractConnectionHandler implements ConnectionHandler {
     private static final Logger logger = LoggerFactory.getLogger(AbstractConnectionHandler.class);
 
-    protected ResponseFuture send(Connection connection, RequestCommand request) {
-        Integer timeout = connection.getUrl().getParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
-        DefaultFuture future = DefaultFuture.newFuture(connection, request, timeout);
-        connection.writeAndFlush(request).addListener(f -> {
-            if (logger.isDebugEnabled()) {
-                logger.debug("write to send message " + request.toString() +
-                        "to" + connection.getRemoteAddress());
-            }
+    public <T> FutureAdapter<T> send(RequestCommand request, int timeout){
+        DefaultFuture future = DefaultFuture.newFuture(getConnection(), request, timeout);
+        FutureAdapter<T> futureAdapter = new FutureAdapter<>(future);
+        writeAndFlush(request).addListener(f->{
             if (f.isSuccess()) {
                 future.sent();
             }
             if (!f.isSuccess()) {
                 // 取消
                 future.cancel();
-                throw new RemotingException(connection, createErrorMsg(connection, request, f.cause()));
+                throw new RemotingException(getConnection(), createErrorMsg(getConnection(), request, f.cause()));
             }
         });
+        return futureAdapter;
 
-        return future;
     }
 
-    public void send(Connection connection, ResponseCommand response) {
-        connection.getChannel().writeAndFlush(response).addListener(f -> {
-            if (logger.isDebugEnabled()) {
-                logger.debug("write to send message" + response.toString() +
-                        "to" + connection.getRemoteAddress());
-            }
-            if (!f.isSuccess()) {
-                throw new RemotingException(connection, createErrorMsg(connection, response, f.cause()));
-            }
-        });
+    public void sendResponseIfNecessary(RequestCommand request, ResponseCommand response) {
+        if (request.isTwoWay()) {
+            Connection connection = getConnection();
+            connection.writeAndFlush(response).addListener(f -> {
+                if (f.isSuccess()) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("write response " + response.toString() +
+                                "to " + getConnection().getRemoteAddress());
+                    }
+                }
+                if (f.cause() != null) {
+                    logger.error("write response " + response.toString() + "to " + connection.getRemoteAddress() + " error", f.cause());
+                }
+            });
+        }
     }
+
 
     private String createErrorMsg(Connection connection, RemotingCommand cmd, Throwable t) {
         StringBuffer errorMsg = new StringBuffer();
@@ -58,4 +63,6 @@ public abstract class AbstractConnectionHandler implements ConnectionHandler {
         }
         return errorMsg.toString();
     }
+
+    abstract ChannelFuture writeAndFlush(Object msg);
 }

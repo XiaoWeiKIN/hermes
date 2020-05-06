@@ -4,6 +4,7 @@ import com.bolt.common.Constants;
 import com.bolt.common.Invocation;
 import com.bolt.common.command.RequestCommand;
 import com.bolt.common.command.ResponseCommand;
+import com.bolt.common.enums.CommandCodeEnum;
 import com.bolt.common.enums.ResponseStatus;
 import com.bolt.common.exception.RemotingException;
 import com.bolt.common.exception.TimeoutException;
@@ -47,6 +48,7 @@ public class DefaultFuture implements ResponseFuture {
     private final long start = System.currentTimeMillis();
     private volatile long sent;
     private volatile ResponseCommand response;
+    private Timeout timeoutCheckTask;
     private ResponseCallback callback;
     public static final Timer TIME_OUT_TIMER = new HashedWheelTimer(
             new NamedThreadFactory("bolt-future-timeout", true),
@@ -119,6 +121,7 @@ public class DefaultFuture implements ResponseFuture {
         errorResult.setErrorMessage("request future has been canceled.");
         response = errorResult;
         FUTURES.remove(id);
+        CONNECTIONS.remove(id);
     }
 
     /**
@@ -142,6 +145,15 @@ public class DefaultFuture implements ResponseFuture {
         try {
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
+                Timeout timeout = future.timeoutCheckTask;
+                if (timeout != null) {
+                    timeout.cancel();
+                }
+                // 重置心跳次数
+                if(response.isHeartbeat()&&ResponseStatus.SUCCESS.equals(response.getStatus())){
+                    connection.resetHeartbeat();
+                }
+
                 future.doReceived(response);
             } else {
                 logger.warn("The timeout response finally returned at "
@@ -226,7 +238,8 @@ public class DefaultFuture implements ResponseFuture {
 
     private String getTimeoutMessage(boolean scan) {
         long nowTimestamp = System.currentTimeMillis();
-        return (sent > 0 ? "Waiting server-side response timeout" : "Sending request timeout in client-side")
+        return (request.getCmdCode().equals(CommandCodeEnum.HEARTBEAT_CMD) ? "Heartbeat " : ("CommandCode " + request.getCmdCode()))
+                + (sent > 0 ? "Waiting server-side response timeout" : "Sending request timeout in client-side")
                 + (scan ? " by scan timer" : "") + ". start time: "
                 + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(start))) + ", end time: "
                 + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date())) + ","
@@ -242,7 +255,7 @@ public class DefaultFuture implements ResponseFuture {
      */
     private static void timeoutCheck(DefaultFuture future) {
         TimeoutCheckTask task = new TimeoutCheckTask(future);
-        TIME_OUT_TIMER.newTimeout(task, future.getTimeout(), TimeUnit.MILLISECONDS);
+        future.timeoutCheckTask = TIME_OUT_TIMER.newTimeout(task, future.getTimeout(), TimeUnit.MILLISECONDS);
     }
 
     private static class TimeoutCheckTask implements TimerTask {

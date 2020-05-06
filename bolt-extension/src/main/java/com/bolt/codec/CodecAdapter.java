@@ -36,7 +36,7 @@ public final class CodecAdapter {
         @Override
         protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
             ChannelBuffer buffer = new ChannelBuffer(in);
-            System.out.println(in.toString(CharsetUtil.UTF_8));
+            System.out.println("<" + in.toString(CharsetUtil.UTF_8) + ">");
             Connection connection = Connection.getOrAddConnection(ctx.channel(), url);
             System.out.println(connection.getChannel());
             try {

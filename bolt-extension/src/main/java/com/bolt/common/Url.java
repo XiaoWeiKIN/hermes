@@ -22,13 +22,20 @@ public class Url {
     public static String ACQUIRE_TIMEOUT_ACTION = Constants.ACQUIRE_TIMEOUT_ACTION;
     public static String RELEASE_HEALTH_CHECK = Constants.RELEASE_HEALTH_CHECK;
     public static String LAST_RECENT_USED = Constants.CONNECTION_LAST_RECENT_USED;
-    public static final String ASYNC_KEY = "async";
+    public static final String ASYNC = Constants.ASYNC_KEY;
+    public static final String ONEWAY = Constants.RETURN_KEY;
+    public static final String MAX_HEARTBEAT_COUNT = Constants.MAX_HEARTBEAT_COUNT;
+
 
     public static Url.UrlBuilder builder() {
         return new Url.UrlBuilder();
     }
 
-    public Url(String host, int port,Map<String, Object> parameters) {
+    public Url(String host, int port) {
+        this(host, port, new HashMap<String, Object>());
+    }
+
+    public Url(String host, int port, Map<String, Object> parameters) {
         this.host = host;
         this.port = port;
         this.parameters = parameters;
@@ -46,11 +53,6 @@ public class Url {
 
     public void addParameters(Map<String, Object> parameters) {
         if (parameters == null || parameters.size() == 0) {
-            return;
-        }
-        if (this.parameters == null) {
-            this.parameters = new HashMap<>();
-            this.parameters.putAll(parameters);
             return;
         }
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
@@ -152,7 +154,7 @@ public class Url {
         }
 
         public Url build() {
-            return new Url(this.host, this.port,this.parameters);
+            return new Url(this.host, this.port, this.parameters);
         }
     }
 }

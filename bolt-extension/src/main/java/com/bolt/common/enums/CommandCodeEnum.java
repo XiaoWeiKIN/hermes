@@ -10,7 +10,9 @@ import lombok.AllArgsConstructor;
  */
 @AllArgsConstructor
 public enum CommandCodeEnum implements CommandCode {
-    GENERAL_CMD((short) 0);
+    GENERAL_CMD((short) 0),
+    HEARTBEAT_CMD((short) 1);
+
 
     private short value;
 

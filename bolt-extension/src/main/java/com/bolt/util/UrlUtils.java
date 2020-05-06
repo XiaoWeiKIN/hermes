@@ -67,4 +67,22 @@ public class UrlUtils {
     public static boolean isOneway(Url url){
         return url.getParameter(Constants.RETURN_KEY, false);
     }
+
+    public static int getHeartbeat(Url url) {
+        return url.getParameter(Constants.HEARTBEAT_KEY, Constants.DEFAULT_HEARTBEAT);
+    }
+
+    public static int getIdleTimeout(Url url) {
+        int heartBeat = getHeartbeat(url);
+        // idleTimeout should be at least more than six heartBeat because possible retries of client.
+        int idleTimeout = url.getParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartBeat * 6);
+        if (idleTimeout < heartBeat * 6) {
+            throw new IllegalStateException("idleTimeout < heartbeatInterval * 6");
+        }
+        return idleTimeout;
+    }
+
+    public static int getTimeout(Url url) {
+        return url.getParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
+    }
 }

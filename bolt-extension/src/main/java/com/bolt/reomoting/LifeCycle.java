@@ -14,6 +14,4 @@ public interface LifeCycle {
     void shutDown() throws LifeCycleException;
 
     boolean isStarted();
-
-    boolean isServerSide();
 }

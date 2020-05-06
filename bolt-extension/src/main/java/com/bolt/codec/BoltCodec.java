@@ -88,7 +88,7 @@ public class BoltCodec extends AbstractCodec implements Codec {
         short cmdCode = Bytes.bytes2short(header, 2);
         if ((flag & FLAG_REQUEST) == 0) {
             ResponseCommand res = new ResponseCommand(CommandCodeEnum.toEnum(cmdCode));
-            res.setHeartbeat((flag & FLAG_TWOWAY) != 0);
+            res.setHeartbeat((flag & FLAG_HEARTBEAT) != 0);
             res.setId(id);
             byte status = header[4];
             res.setStatus(ResponseStatus.toEnum(status));
@@ -97,7 +97,7 @@ public class BoltCodec extends AbstractCodec implements Codec {
                 ObjectInput input = serialization.deserialize(is);
                 if (ResponseStatus.SUCCESS.equals(res.getStatus())) {
                     if (res.isHeartbeat()) {
-                        // TODO
+                        // heartBeat不用解码，心跳也可以携带body
                     }
                     DecodeableInvocation inv = new DecodeableInvocation(res,
                             new UnsafeByteArrayInputStream(readMessageData(is)), prto);
@@ -114,13 +114,14 @@ public class BoltCodec extends AbstractCodec implements Codec {
         } else {
             RequestCommand req = new RequestCommand(CommandCodeEnum.toEnum(cmdCode));
             try {
-                req.setHeartbeat((flag & FLAG_TWOWAY) != 0);
+                req.setHeartbeat((flag & FLAG_HEARTBEAT) != 0);
                 req.setTwoWay((flag & FLAG_TWOWAY) != 0);
                 req.setId(id);
                 req.setVersion(Version.getProtocolVersion());
                 if (req.isHeartbeat()) {
-                    // TODO
+
                 }
+
                 // 业务线程解码,先把消息体读到字节数组中
                 DecodeableInvocation inv = new DecodeableInvocation(req,
                         new UnsafeByteArrayInputStream(readMessageData(is)), prto);
@@ -166,6 +167,7 @@ public class BoltCodec extends AbstractCodec implements Codec {
             // encode response data or error message.
             if (ResponseStatus.SUCCESS.equals(res.getStatus())) {
                 if (res.isHeartbeat()) {
+                    encodeData(out, res.getInvocation(), null);
                 } else {
                     encodeData(out, res.getInvocation(), Version.getProtocolVersion());
                 }
@@ -218,7 +220,6 @@ public class BoltCodec extends AbstractCodec implements Codec {
             if (req.isHeartbeat()) {
                 encodeData(out, req.getInvocation(), null);
             } else {
-                // TODO 异常捕获
                 encodeData(out, req.getInvocation(), Version.getProtocolVersion());
             }
             out.flushBuffer();
@@ -243,8 +244,10 @@ public class BoltCodec extends AbstractCodec implements Codec {
         if (version != null) {
             out.writeUTF(version);
         }
-        out.writeUTF(inv.getClassName());
-        out.writeObject(inv.getData());
+        if (inv != null) {
+            out.writeUTF(inv.getClassName());
+            out.writeObject(inv.getData());
+        }
     }
 
     private byte[] readMessageData(InputStream is) throws IOException {

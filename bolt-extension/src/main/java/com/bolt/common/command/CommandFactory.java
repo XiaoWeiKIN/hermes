@@ -28,7 +28,10 @@ public class CommandFactory {
     }
 
     public ResponseCommand createResponse(RequestCommand request, Object response) {
-        ResponseCommand responseCommand = new ResponseCommand(request.getId(),request.getCmdCode());
+        if (response instanceof ResponseCommand) {
+            return (ResponseCommand) response;
+        }
+        ResponseCommand responseCommand = new ResponseCommand(request.getId(), request.getCmdCode());
         responseCommand.setStatus(ResponseStatus.SUCCESS);
         Invocation invocation = new Invocation();
         invocation.setClassName(response.getClass().getName());
@@ -38,7 +41,7 @@ public class CommandFactory {
     }
 
     public ResponseCommand createResponse(RequestCommand request, ResponseStatus status, String errorMsg) {
-        ResponseCommand responseCommand = new ResponseCommand(request.getId(),request.getCmdCode());
+        ResponseCommand responseCommand = new ResponseCommand(request.getId(), request.getCmdCode());
         responseCommand.setStatus(status);
         responseCommand.setErrorMessage(errorMsg);
         return responseCommand;

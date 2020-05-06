@@ -87,10 +87,12 @@ public class FutureCallbackTest {
 
     @Test
     public void completable_future_test() {
-        CompletableFuture.supplyAsync(() -> {
-            return "string";
-        }).whenComplete((res, e) -> {
-            System.out.println(res);
+        CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
+            return "test";
+        });
+
+        completableFuture.whenComplete((k,v)->{
+
         });
     }
 }

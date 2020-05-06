@@ -5,8 +5,11 @@ import com.bolt.common.command.RemotingCommand;
 import com.bolt.common.command.ResponseCommand;
 import com.bolt.common.enums.ResponseStatus;
 import com.bolt.common.exception.SerializationException;
+import com.bolt.protocol.handler.AbstractCommandHandler;
 import io.netty.handler.codec.DecoderException;
 import io.netty.util.concurrent.SingleThreadEventExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 import com.bolt.serialization.ObjectInput;
 import com.bolt.serialization.Serialization;
@@ -22,6 +25,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
  * @Description: TODO
  */
 public class DecodeableInvocation extends Invocation implements Decdeable {
+    private static final Logger logger = LoggerFactory.getLogger(DecodeableInvocation.class);
 
     private byte serializationType;
     private InputStream inputStream;
@@ -47,7 +51,7 @@ public class DecodeableInvocation extends Invocation implements Decdeable {
     @Override
     public void decodeClassName() throws DecoderException {
         try {
-            if (state == DESERIALIZE_NO && inputStream != null) {
+            if (state == DESERIALIZE_NO && inputStream.available() > 0) {
                 // Response
                 if (command instanceof ResponseCommand) {
                     ResponseCommand response = (ResponseCommand) command;
@@ -62,6 +66,9 @@ public class DecodeableInvocation extends Invocation implements Decdeable {
                     command.setVersion(version);
                     String className = objectInput.readUTF();
                     this.setClassName(className);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Decode ClassName {}", getClassName());
+                    }
                 }
             }
         } catch (IOException e) {
@@ -72,10 +79,13 @@ public class DecodeableInvocation extends Invocation implements Decdeable {
     @Override
     public void decodeData() throws DecoderException {
         try {
-            if (state == DESERIALIZE_KEY && inputStream != null) {
+            if (state == DESERIALIZE_KEY) {
                 if (STATE_UPDATER.compareAndSet(this, DESERIALIZE_KEY, DESERIALIZE_DATA)) {
                     Class<?> clazz = Class.forName(this.getClassName(), false, Thread.currentThread().getContextClassLoader());
                     this.setData(objectInput.readObject(clazz));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Decode data {}", getData().toString());
+                    }
                 }
             }
         } catch (IOException | ClassNotFoundException e) {

@@ -16,12 +16,15 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.Map;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 /**
@@ -47,8 +50,11 @@ public class BoltServer extends AbstractServer<BoltServer> {
         bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("BoltServerBoss", false));
         workerGroup = new NioEventLoopGroup(this.option(BoltGenericOption.IO_THREADS), new DefaultThreadFactory("BoltServerWorker", true));
         port = this.option(BoltServerOption.PORT);
-        setUrl(new Url(NetUtils.getLocalHost(), port, this.options(BoltRemotingOption.class)));
-        final BoltHandler serverHandler = new BoltHandler(getUrl(), getProtocol());
+        setUrl(new Url(NetUtils.getLocalHost(), port));
+        final BoltHandler serverHandler = new BoltHandler(getUrl(), getProtocol(), isServerSide());
+        int idleTimeout = UrlUtils.getIdleTimeout(getUrl());
+        serverHandler.setConnectionEventListener(getConnectionEventListener());
+
 
         bootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
@@ -63,6 +69,7 @@ public class BoltServer extends AbstractServer<BoltServer> {
                         ch.pipeline()
                                 .addLast("decoder", adapter.getDecoder())
                                 .addLast("encoder", adapter.getEncoder())
+                                .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
                                 .addLast(serverHandler);
                     }
                 });

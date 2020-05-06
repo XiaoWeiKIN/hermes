@@ -2,14 +2,13 @@ package com.bolt.transport;
 
 import com.bolt.codec.Codec;
 import com.bolt.common.Constants;
-import com.bolt.reomoting.RemotingContext;
+import com.bolt.common.command.RequestCommand;
 import com.bolt.common.Url;
 import com.bolt.common.command.CommandFactory;
 import com.bolt.common.exception.RemotingException;
 import com.bolt.reomoting.Connection;
 import com.bolt.protocol.Protocol;
 import com.bolt.reomoting.FutureAdapter;
-import com.bolt.reomoting.ResponseFuture;
 import com.bolt.util.ExecutorUtil;
 import com.bolt.util.UrlUtils;
 import io.netty.channel.pool.*;
@@ -37,13 +36,15 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  */
 public abstract class AbstractClient<K, P extends ChannelPool> extends AbstractEndpoint implements Client, ChannelPoolMap<K, P>, Iterable<Map.Entry<K, P>>, Closeable {
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
-
+    protected ReconnectManager reconnectManager;
     private final ConcurrentMap<K, P> map = PlatformDependent.newConcurrentHashMap();
     private CommandFactory commandFactory;
 
     public AbstractClient(Codec codec, Protocol protocol) {
         super(codec, protocol);
         this.commandFactory = new CommandFactory();
+        this.reconnectManager = new ReconnectManager(this);
+        this.reconnectManager.startUp();
     }
 
     public AbstractClient(boolean serverSide, Codec codec, Protocol protocol) {
@@ -163,7 +164,6 @@ public abstract class AbstractClient<K, P extends ChannelPool> extends AbstractE
         Connection.clear();
         // 关闭线程池
         ExecutorUtil.gracefulShutdown(getProtocol().getDefaultExecutor(), 100);
-
         try {
             doClose();
         } catch (Throwable t) {
@@ -210,33 +210,33 @@ public abstract class AbstractClient<K, P extends ChannelPool> extends AbstractE
     }
 
     @Override
-    public <T> T request(Url url, Object request) {
+    public <T> T request(Url url, Object msg) throws RemotingException {
         Connection connection = ctreateConnectionIfAbsent(url);
-        ResponseFuture future = connection.send(commandFactory.createRequest(request));
-        boolean isAsync = UrlUtils.isAsync(url);
-        if (isAsync) {
-            FutureAdapter<T> futureAdapter = new FutureAdapter<>(future);
-            RemotingContext.getContext().setFuture(futureAdapter);
+        RequestCommand request = commandFactory.createRequest(msg);
+        if (UrlUtils.isOneway(url)) {
+            connection.writeAndFlush(request);
             return null;
         }
-        return future.get();
-
+        int timeout = UrlUtils.getTimeout(url);
+        FutureAdapter<Object> future = connection.send(request, timeout);
+        if (UrlUtils.isAsync(url)) {
+            return (T) future;
+        } else {
+            try {
+                return (T) future.get();
+            } catch (Exception e) {
+                throw new RemotingException(connection, e);
+            }
+        }
     }
 
-    @Override
-    public void reconnect() throws RemotingException {
-
-    }
-
-    public InetSocketAddress getConnectAddresss(){
-        return new InetSocketAddress(getUrl().getHost(),getUrl().getPort());
+    public InetSocketAddress getConnectAddresss() {
+        return new InetSocketAddress(getUrl().getHost(), getUrl().getPort());
     }
 
     /**
      * Called once a new {@link ChannelPool} needs to be created as non exists yet for the {@code key}.
      */
     protected abstract P newPool(K key);
-
-    protected abstract Connection ctreateConnectionIfAbsent(Url url) throws RemotingException;
 
 }

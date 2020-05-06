@@ -1,10 +1,9 @@
-package com.bolt.protocol;
+package com.bolt.protocol.handler;
 
 import com.bolt.common.exception.RemotingException;
 import com.bolt.reomoting.RemotingContext;
 import com.bolt.common.command.CommandCode;
 import com.bolt.common.extension.Extension;
-import com.bolt.protocol.processor.UserProcessor;
 
 
 /**
@@ -20,6 +19,4 @@ public interface CommandHandler<T> {
     void handle(RemotingContext ctx, T command) throws RemotingException;
 
     boolean handelInIOThread();
-
-    void registerProcessor(UserProcessor processor);
 }

@@ -17,4 +17,6 @@ public interface Endpoint {
     Url getUrl();
 
     InetSocketAddress getLocalAddress();
+
+    boolean isServerSide();
 }

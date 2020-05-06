@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  * @DateTime: 2020/4/20
  * @Description: TODO
  */
-public class SimpleReqProcesser extends SyncUserProcessor<ReqBody> {
+public class SimpleReqProcesser extends AbstractUserProcessorAdapter<ReqBody> {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     @Override

@@ -11,8 +11,6 @@ import com.bolt.common.exception.RemotingException;
  */
 public interface ConnectionHandler {
 
-    ResponseFuture send(RequestCommand request) throws RemotingException;
-
-    void send(ResponseCommand response) throws RemotingException;
+    Connection getConnection();
 
 }

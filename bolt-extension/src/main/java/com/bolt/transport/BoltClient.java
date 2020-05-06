@@ -6,12 +6,14 @@ import com.bolt.codec.CodecAdapter;
 import com.bolt.common.Constants;
 import com.bolt.common.Url;
 import com.bolt.common.exception.RemotingException;
+import com.bolt.config.BoltClientOption;
 import com.bolt.config.BoltGenericOption;
 import com.bolt.config.BoltRemotingOption;
 import com.bolt.protocol.BoltProtocol;
 import com.bolt.protocol.Protocol;
 import com.bolt.reomoting.Connection;
 import com.bolt.util.NetUtils;
+import com.bolt.util.UrlUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
@@ -21,6 +23,7 @@ import io.netty.channel.pool.ChannelHealthChecker;
 import io.netty.channel.pool.ChannelPoolHandler;
 import io.netty.channel.pool.FixedChannelPool;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.Future;
 import org.slf4j.Logger;
@@ -30,6 +33,8 @@ import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * @Author: wangxw
@@ -53,20 +58,23 @@ public class BoltClient extends AbstractClient<InetSocketAddress, FixedChannelPo
     protected FixedChannelPool newPool(InetSocketAddress key) {
         Url url = getUrl();
         Long acquireTimeout = url.getParameter(Constants.ACQUIRE_TIMEOUT,
-                this.option(BoltRemotingOption.ACQUIRE_TIMEOUT));
+                this.option(BoltClientOption.ACQUIRE_TIMEOUT));
         Integer maxConnection = url.getParameter(Constants.MAX_CONNECTION,
-                this.option(BoltRemotingOption.MAX_CONNECTION));
+                this.option(BoltClientOption.MAX_CONNECTION));
         Integer maxPendingAcquires = url.getParameter(Constants.MAX_PENDING_ACQUIRES,
-                this.option(BoltRemotingOption.MAX_PENDING_ACQUIRES));
+                this.option(BoltClientOption.MAX_PENDING_ACQUIRES));
         Boolean relaseHealthCheck = url.getParameter(Constants.RELEASE_HEALTH_CHECK,
-                this.option(BoltRemotingOption.RELEASE_HEALTH_CHECK));
+                this.option(BoltClientOption.RELEASE_HEALTH_CHECK));
         Boolean lastRecentUsed = url.getParameter(Constants.CONNECTION_LAST_RECENT_USED,
-                this.option(BoltRemotingOption.CONNECTION_LAST_RECENT_USED));
+                this.option(BoltClientOption.CONNECTION_LAST_RECENT_USED));
         String action = url.getParameter(Constants.ACQUIRE_TIMEOUT_ACTION,
-                this.option(BoltRemotingOption.ACQUIRE_TIMEOUT_ACTION));
+                this.option(BoltClientOption.ACQUIRE_TIMEOUT_ACTION));
         FixedChannelPool.AcquireTimeoutAction timeoutAction = "new".equals(action)
                 ? FixedChannelPool.AcquireTimeoutAction.NEW : FixedChannelPool.AcquireTimeoutAction.FAIL;
-        BoltHandler clientHandler = new BoltHandler(getUrl(), getProtocol());
+        BoltHandler clientHandler = new BoltHandler(getUrl(), getProtocol(), isServerSide());
+        clientHandler.setConnectionEventListener(getConnectionEventListener());
+        clientHandler.setReconnectManager(reconnectManager);
+        int heartbeatInterval = UrlUtils.getHeartbeat(url);
 
         return new FixedChannelPool(bootstrap.remoteAddress(key), new ChannelPoolHandler() {
             @Override
@@ -89,6 +97,7 @@ public class BoltClient extends AbstractClient<InetSocketAddress, FixedChannelPo
                 ch.pipeline()
                         .addLast("decoder", adapter.getDecoder())
                         .addLast("encoder", adapter.getEncoder())
+                        .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
                         .addLast(clientHandler);
             }
         }, ChannelHealthChecker.ACTIVE, timeoutAction, acquireTimeout,

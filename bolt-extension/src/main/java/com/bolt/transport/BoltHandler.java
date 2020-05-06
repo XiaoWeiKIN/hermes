@@ -3,16 +3,21 @@ package com.bolt.transport;
 import com.bolt.common.Url;
 import com.bolt.common.command.RequestCommand;
 import com.bolt.common.command.ResponseCommand;
+import com.bolt.common.enums.CommandCodeEnum;
+import com.bolt.common.enums.ConnectionEventType;
 import com.bolt.common.enums.ResponseStatus;
-import com.bolt.common.exception.RemotingException;
+import com.bolt.common.exception.ExecutionException;
+import com.bolt.protocol.handler.HeartbeatHandler;
 import com.bolt.reomoting.Connection;
 import com.bolt.reomoting.RemotingContext;
 import com.bolt.common.command.RemotingCommand;
-import com.bolt.protocol.CommandHandler;
+import com.bolt.protocol.handler.CommandHandler;
 import com.bolt.protocol.Protocol;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import com.bolt.util.ObjectUtils;
+import io.netty.channel.*;
+import io.netty.handler.timeout.IdleStateEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.RejectedExecutionException;
 
@@ -22,14 +27,48 @@ import java.util.concurrent.RejectedExecutionException;
  * @Description: TODO
  */
 @ChannelHandler.Sharable
-public class BoltHandler extends ChannelInboundHandlerAdapter {
+public class BoltHandler extends ChannelDuplexHandler {
+    private static final Logger logger = LoggerFactory.getLogger(BoltHandler.class);
     private final Protocol protocol;
-
     private Url url;
+    private final boolean serverSide;
 
-    public BoltHandler(Url url, Protocol protocol) {
+    private ConnectionEventListener eventListener;
+
+    private ReconnectManager reconnectManager;
+
+    public BoltHandler(Url url, Protocol protocol, boolean serverSide) {
         this.url = url;
         this.protocol = protocol;
+        this.serverSide = serverSide;
+    }
+
+    public void setConnectionEventListener(ConnectionEventListener eventListener) {
+        this.eventListener = eventListener;
+    }
+
+    public void setReconnectManager(ReconnectManager reconnectManager) {
+        this.reconnectManager = reconnectManager;
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        Connection connection = Connection.getOrAddConnection(ctx.channel(), url);
+        protocol.getDefaultExecutor().execute(() -> {
+            eventListener.onEvent(ConnectionEventType.CONNECT, connection);
+        });
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        Connection connection = Connection.getOrAddConnection(ctx.channel(), url);
+        try {
+            protocol.getDefaultExecutor().execute(() -> {
+                eventListener.onEvent(ConnectionEventType.CLOSE, connection);
+            });
+        } finally {
+            Connection.removeChannelIfDisconnected(ctx.channel());
+        }
     }
 
     @Override
@@ -45,15 +84,13 @@ public class BoltHandler extends ChannelInboundHandlerAdapter {
             if (command instanceof RequestCommand && t instanceof RejectedExecutionException) {
                 String errorMsg = "Server side(" + url.getHost() + "," + url.getPort() + ") threadpool is exhausted ,detail msg:" + t.getMessage();
                 RequestCommand request = (RequestCommand) command;
-                if (request.isTwoWay()) {
-                    ResponseCommand respnse = new ResponseCommand(request.getId(), request.getCmdCode());
-                    respnse.setStatus(ResponseStatus.SERVER_THREADPOOL_BUSY);
-                    respnse.setErrorMessage(errorMsg);
-                    connection.send(respnse);
-                    return;
-                }
+                ResponseCommand response = new ResponseCommand(request.getId(), request.getCmdCode());
+                response.setStatus(ResponseStatus.SERVER_THREADPOOL_BUSY);
+                response.setErrorMessage(errorMsg);
+                connection.sendResponseIfNecessary(request, response);
+                return;
             }
-            throw new RemotingException(connection, t.getCause());
+            throw new ExecutionException(command, connection, t.getCause());
         } finally {
             Connection.removeChannelIfDisconnected(ctx.channel());
         }
@@ -61,7 +98,49 @@ public class BoltHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
-        System.out.println(cause);
+        Connection connection = Connection.getOrAddConnection(ctx.channel(), url);
+        try {
+            if (cause instanceof ExecutionException) {
+                ExecutionException e = (ExecutionException) cause;
+                RemotingCommand command = e.getCommand();
+                if (command instanceof RequestCommand) {
+                    RequestCommand request = (RequestCommand) command;
+                    ResponseCommand response = new ResponseCommand(request.getId(), request.getCmdCode());
+                    response.setStatus(ResponseStatus.SERVER_EXCEPTION);
+                    response.setErrorMessage(ObjectUtils.toString(e));
+                    connection.sendResponseIfNecessary(request, response);
+                    return;
+                }
+            }
+            logger.error(ObjectUtils.toString(cause), cause);
+        } finally {
+            Connection.removeChannelIfDisconnected(ctx.channel());
+        }
     }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            Connection connection = Connection.getOrAddConnection(ctx.channel(), url);
+            System.out.println("sss" + connection);
+            try {
+                if (serverSide) {
+                    // 直接关闭连接
+                    connection.close();
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Send heartbeat to remote connection " + connection + " ,heartbeat times " + connection.attr(Connection.HEARTBEAT_COUNT).get());
+                    }
+                    HeartbeatHandler handler = (HeartbeatHandler) protocol.getCommandHandler(CommandCodeEnum.HEARTBEAT_CMD);
+                    handler.setReconnectManager(reconnectManager);
+                    handler.sendHeartbeat(connection);
+                }
+            } finally {
+                Connection.removeChannelIfDisconnected(ctx.channel());
+            }
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
+    }
+
 }

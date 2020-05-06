@@ -1,12 +1,16 @@
 package com.bolt.reomoting;
 
 
+import com.bolt.common.Constants;
 import com.bolt.common.Url;
+import com.bolt.common.command.RemotingCommand;
 import com.bolt.common.command.RequestCommand;
 import com.bolt.common.command.ResponseCommand;
 import com.bolt.common.exception.RemotingException;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public final class Connection extends AbstractConnectionHandler {
     private static final Logger logger = LoggerFactory.getLogger(Connection.class);
+    public static final AttributeKey<Integer> HEARTBEAT_COUNT = AttributeKey.valueOf("heartbeatCount");
     public static final ConcurrentMap<io.netty.channel.Channel, Connection> connectionMap = new ConcurrentHashMap<io.netty.channel.Channel, Connection>();
     private Channel channel;
     private Url url;
@@ -33,6 +38,7 @@ public final class Connection extends AbstractConnectionHandler {
     public Connection(Channel channel, Url url) {
         this.channel = channel;
         this.url = url;
+        attr(HEARTBEAT_COUNT).set(0);
     }
 
     public Channel getChannel() {
@@ -47,30 +53,27 @@ public final class Connection extends AbstractConnectionHandler {
         return this.channel.isWritable();
     }
 
-
+    @Override
     public ChannelFuture writeAndFlush(Object msg) throws RemotingException {
         if (channel == null) {
             throw new RemotingException(this, "The connection has no valid channel, Connection url" + this.url);
         }
+
         if (!isWritable()) {
             logger.error("The connection {} write overflow !!!", this);
             throw new RemotingException(this, "The connection {} write overflow !!!" + this);
         }
         return channel.writeAndFlush(msg);
     }
-    @Override
-    public ResponseFuture send(RequestCommand request) {
-        return super.send(this, request);
-    }
-    @Override
-    public void send(ResponseCommand response) {
-        super.send(this, response);
+
+    public boolean isActive(){
+        return channel.isActive();
     }
 
     public void close() {
         try {
             if (logger.isInfoEnabled()) {
-                logger.info("Close netty channel " + channel);
+                logger.info("Close connection" + channel);
             }
             try {
                 channel.close();
@@ -99,7 +102,21 @@ public final class Connection extends AbstractConnectionHandler {
         if (channel == null) {
             return null;
         }
+
         return (InetSocketAddress) this.channel.remoteAddress();
+    }
+
+    @Override
+    public Connection getConnection() {
+        return this;
+    }
+
+    public <T> Attribute<T> attr(AttributeKey<T> key) {
+        return channel.attr(key);
+    }
+
+    public void resetHeartbeat() {
+        attr(Connection.HEARTBEAT_COUNT).set(0);
     }
 
     public static Connection getOrAddConnection(Channel ch, Url url) {
@@ -108,12 +125,12 @@ public final class Connection extends AbstractConnectionHandler {
         }
         Connection ret = connectionMap.get(ch);
         if (ret == null) {
-            Connection boltChannel = new Connection(ch, url);
+            Connection connection = new Connection(ch, url);
             if (ch.isActive()) {
-                ret = connectionMap.putIfAbsent(ch, boltChannel);
+                ret = connectionMap.putIfAbsent(ch, connection);
             }
             if (ret == null) {
-                ret = boltChannel;
+                ret = connection;
             }
         }
         return ret;
@@ -141,8 +158,6 @@ public final class Connection extends AbstractConnectionHandler {
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);
         }
-
-
     }
 
     @Override
@@ -175,5 +190,8 @@ public final class Connection extends AbstractConnectionHandler {
         return true;
     }
 
-
+    @Override
+    public String toString() {
+        return "[connection=" + channel + "]";
+    }
 }

@@ -1,8 +1,7 @@
-package com.bolt.protocol;
+package com.bolt.protocol.handler;
 
 import com.bolt.common.command.CommandCode;
 import com.bolt.common.extension.ExtensionLoader;
-import com.bolt.protocol.processor.UserProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,17 +35,6 @@ public class CommandHandlerManager {
                 logger.debug("Register cmdCode [" + cmdCode + "] with CommandHandler [" + commandHandler.getClass().getName() + "]");
             }
         }
-        supportedExtensions = ExtensionLoader.getExtensionLoader(UserProcessor.class).getSupportedExtensions();
-        for (String name : supportedExtensions) {
-            UserProcessor processor = ExtensionLoader.getExtensionLoader(UserProcessor.class).getExtension(name);
-            CommandHandler<?> handler = CMD_HANDLER_MAP.get(processor.cmdCode());
-            if (handler == null) {
-                logger.error("CommandHandler not exist with processer interest key " + processor.interest());
-                continue;
-            }
-            handler.registerProcessor(processor);
-        }
-
     }
 
     public CommandHandler getCmdHandler(CommandCode cmdCode) {

@@ -26,7 +26,7 @@ public class SerializationTest {
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
     @Test
-    public void test_se() throws Exception{
+    public void test_se() throws Exception {
         String str = "zhan";
         Data data = new Data();
         data.setName(str);
@@ -40,12 +40,20 @@ public class SerializationTest {
         ObjectInput objectInput = hessian2Serialization.deserialize(byteArrayInputStream);
         Assert.assertEquals(str, objectInput.readUTF());
         Assert.assertEquals(data.toString(), objectInput.readObject(Data.class).toString());
+    }
 
+    @Test
+    public void t() {
+        boolean a = true;
+        boolean b = true;
 
+        if (!a && !b) {
+            System.out.println("......");
+        }
     }
 
     @lombok.Data
-    public static class  Data implements Serializable {
+    public static class Data implements Serializable {
         String name;
     }
 }

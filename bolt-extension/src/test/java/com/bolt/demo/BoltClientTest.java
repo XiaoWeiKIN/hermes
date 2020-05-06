@@ -1,5 +1,6 @@
 package com.bolt.demo;
 
+import com.bolt.config.BoltClientOption;
 import com.bolt.reomoting.RemotingContext;
 import com.bolt.common.Url;
 import com.bolt.config.BoltRemotingOption;
@@ -25,37 +26,28 @@ public class BoltClientTest {
     public static void main(String[] args) throws Exception {
         CountDownLatchUtil latch = new CountDownLatchUtil(20);
         BoltClient bootstrap = new BoltClient();
-        bootstrap.option(BoltRemotingOption.CONNECT_TIMEOUT, 3000);
+        bootstrap.option(BoltClientOption.CONNECT_TIMEOUT, 3000)
+                .option(BoltClientOption.HEARTBEATINTERVAL, 5000);
         bootstrap.startUp();
         ReqBody requestBody = new ReqBody();
         requestBody.setName("zhang");
         requestBody.setAge(20);
         Map<String, Object> map = new HashMap<String, Object>();
         map.put(Url.CONNECT_TIMEOUT_KEY, 9000);
-        map.put(Url.ASYNC_KEY, true);
+//        map.put(Url.ASYNC, true);
         Url url = Url.builder()
                 .host("127.0.0.1")
                 .port(9091)
                 .setParameters(map)
                 .build();
-        bootstrap.request(url, requestBody);
-        CompletableFuture<String> future = RemotingContext.getContext().getCompletableFuture();
+        try {
+            String body = bootstrap.request(url, requestBody);
+            System.out.println("Client recv: " + body);
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
 
-        latch.latch(() -> {
-//        future.whenComplete((v,e)->{
-//            downLatch.countDown();
-//            logger.info(v);
-//        });
-            try {
-                String s = future.get();
-                logger.info(s);
-            } catch (Exception e) {
-
-            }
-
-        });
-
-//        downLatch.await();
+        new CountDownLatch(1).await();
 
     }
 }

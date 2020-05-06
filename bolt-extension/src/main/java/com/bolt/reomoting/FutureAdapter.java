@@ -16,11 +16,8 @@ import java.util.concurrent.TimeoutException;
 public class FutureAdapter<V> extends CompletableFuture<V> {
 
     private final ResponseFuture future;
-    private CompletableFuture<Object> resultFuture;
-
     public FutureAdapter(ResponseFuture future) {
         this.future = future;
-        this.resultFuture = new CompletableFuture<>();
         future.setCallback(new ResponseCallback() {
             @Override
             public void done(Invocation invocation) {

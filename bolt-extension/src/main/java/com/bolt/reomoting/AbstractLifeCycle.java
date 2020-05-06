@@ -12,17 +12,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class AbstractLifeCycle implements LifeCycle {
 
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
-    private final boolean serverSide;
-    public AbstractLifeCycle(boolean serverSide) {
-        this.serverSide = serverSide;
-    }
 
     @Override
     public void startUp() {
         if (isStarted.compareAndSet(false, true)) {
             return;
         }
-        throw new LifeCycleException(serverSide ? "Server" : "Client" + " component has started");
+        throw new LifeCycleException("This component has started");
 
     }
 
@@ -31,7 +27,7 @@ public abstract class AbstractLifeCycle implements LifeCycle {
         if (isStarted.compareAndSet(true, false)) {
             return;
         }
-        throw new LifeCycleException(serverSide ? "Server" : "Client" + " component has started");
+        throw new LifeCycleException("This component has shutdown");
     }
 
 
@@ -40,8 +36,4 @@ public abstract class AbstractLifeCycle implements LifeCycle {
         return isStarted.get();
     }
 
-    @Override
-    public boolean isServerSide() {
-        return serverSide;
-    }
 }

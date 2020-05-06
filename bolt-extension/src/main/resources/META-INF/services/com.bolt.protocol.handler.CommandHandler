@@ -1,0 +1,2 @@
+generalReq=com.bolt.protocol.handler.GeneralCmdHandler
+heartbeat=com.bolt.protocol.handler.HeartbeatHandler

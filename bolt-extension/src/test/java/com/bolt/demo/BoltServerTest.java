@@ -1,5 +1,6 @@
 package com.bolt.demo;
 
+import com.bolt.common.enums.ConnectionEventType;
 import com.bolt.config.BoltServerOption;
 import com.bolt.transport.BoltServer;
 
@@ -12,6 +13,8 @@ public class BoltServerTest {
     public static void main(String[] args) {
         BoltServer server = new BoltServer();
         server.option(BoltServerOption.PORT,9091);
+        server.addConnectionEventProcessor(ConnectionEventType.CONNECT,((connection) -> {
+        }));
         server.startUp();
     }
 }

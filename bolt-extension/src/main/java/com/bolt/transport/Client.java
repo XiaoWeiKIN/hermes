@@ -2,6 +2,7 @@ package com.bolt.transport;
 
 import com.bolt.common.Url;
 import com.bolt.common.exception.RemotingException;
+import com.bolt.reomoting.Connection;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -12,9 +13,8 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface Client extends Endpoint {
 
-    void reconnect() throws RemotingException;
-
-    <T> T request(Url url, Object request);
+    Connection ctreateConnectionIfAbsent(Url url) throws RemotingException;
 
 
+    <T> T request(Url url, Object request) throws RemotingException;
 }

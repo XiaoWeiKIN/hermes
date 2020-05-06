@@ -33,5 +33,4 @@ public abstract class AbstractUserProcessorAdapter<T> implements UserProcessor<T
     public void setExecutor(ExecutorService executor) {
         this.executor = executor;
     }
-
 }

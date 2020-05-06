@@ -33,7 +33,10 @@ public class Constants {
     public static final int DEFAULT_TIMEOUT = 3000;
     public static final String ASYNC_KEY = "async";
     public static final String RETURN_KEY = "return";
+    public static final String HEARTBEAT_KEY = "heartbeat";
+    public static final int DEFAULT_HEARTBEAT = 15 * 1000;
 
-
-
+    public static final String MAX_HEARTBEAT_COUNT = "heartbeat.times";
+    public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeat.timeout";
+    public static final int DEFAULT_MAX_HEARTBEAT_COUNT = 3;
 }

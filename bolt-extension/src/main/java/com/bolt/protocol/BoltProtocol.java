@@ -1,13 +1,9 @@
 package com.bolt.protocol;
 
 import com.bolt.common.command.CommandCode;
-import com.bolt.protocol.CommandHandler;
-import com.bolt.protocol.CommandHandlerManager;
-import com.bolt.protocol.Protocol;
+import com.bolt.protocol.handler.CommandHandler;
+import com.bolt.protocol.handler.CommandHandlerManager;
 import com.bolt.util.NamedThreadFactory;
-import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.Assert;
 
 import java.util.concurrent.*;
 
