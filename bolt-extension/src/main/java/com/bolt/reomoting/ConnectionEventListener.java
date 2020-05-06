@@ -1,9 +1,7 @@
-package com.bolt.transport;
+package com.bolt.reomoting;
 
 import com.bolt.common.enums.ConnectionEventType;
-import com.bolt.reomoting.Connection;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;

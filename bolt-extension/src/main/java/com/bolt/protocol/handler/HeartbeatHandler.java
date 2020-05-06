@@ -1,20 +1,15 @@
 package com.bolt.protocol.handler;
 
 import com.bolt.common.Constants;
-import com.bolt.common.Invocation;
-import com.bolt.common.Url;
 import com.bolt.common.Version;
 import com.bolt.common.command.CommandCode;
 import com.bolt.common.command.RequestCommand;
 import com.bolt.common.command.ResponseCommand;
 import com.bolt.common.enums.CommandCodeEnum;
 import com.bolt.common.enums.ResponseStatus;
-import com.bolt.common.exception.RemotingException;
 import com.bolt.reomoting.Connection;
-import com.bolt.reomoting.DefaultFuture;
 import com.bolt.reomoting.RemotingContext;
-import com.bolt.reomoting.ResponseCallback;
-import com.bolt.transport.ReconnectManager;
+import com.bolt.transport.ReconnectClient;
 import io.netty.util.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class HeartbeatHandler extends AbstractCommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(HeartbeatHandler.class);
     private Lock connectionLock = new ReentrantLock();
-    private ReconnectManager reconnectManager;
+    private ReconnectClient reconnectClient;
 
     @Override
     public Object handleRequest(RemotingContext ctx, RequestCommand request) throws Exception {
@@ -38,7 +33,6 @@ public class HeartbeatHandler extends AbstractCommandHandler {
         response.setStatus(ResponseStatus.SUCCESS);
         response.setHeartbeat(true);
         response.setVersion(Version.getProtocolVersion());
-        Thread.sleep(3000);
         if (logger.isDebugEnabled()) {
             logger.debug("Received heartbeat from remote connection " + ctx.getConnection());
         }
@@ -63,7 +57,7 @@ public class HeartbeatHandler extends AbstractCommandHandler {
                     connection.close();
                 }
                 if(!connection.isActive()){
-                    reconnectManager.reconnect(connection.getUrl());
+                    reconnectClient.reconnect(connection.getUrl());
                 }
             } finally {
                 connectionLock.unlock();
@@ -90,7 +84,7 @@ public class HeartbeatHandler extends AbstractCommandHandler {
         }
     }
 
-    public void setReconnectManager(ReconnectManager reconnectManager) {
-        this.reconnectManager = reconnectManager;
+    public void setReconnectClient(ReconnectClient reconnectClient) {
+        this.reconnectClient = reconnectClient;
     }
 }

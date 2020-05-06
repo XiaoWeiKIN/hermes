@@ -9,6 +9,7 @@ import com.bolt.common.enums.ResponseStatus;
 import com.bolt.common.exception.ExecutionException;
 import com.bolt.protocol.handler.HeartbeatHandler;
 import com.bolt.reomoting.Connection;
+import com.bolt.reomoting.ConnectionEventListener;
 import com.bolt.reomoting.RemotingContext;
 import com.bolt.common.command.RemotingCommand;
 import com.bolt.protocol.handler.CommandHandler;
@@ -35,7 +36,7 @@ public class BoltHandler extends ChannelDuplexHandler {
 
     private ConnectionEventListener eventListener;
 
-    private ReconnectManager reconnectManager;
+    private ReconnectClient reconnectClient;
 
     public BoltHandler(Url url, Protocol protocol, boolean serverSide) {
         this.url = url;
@@ -47,8 +48,8 @@ public class BoltHandler extends ChannelDuplexHandler {
         this.eventListener = eventListener;
     }
 
-    public void setReconnectManager(ReconnectManager reconnectManager) {
-        this.reconnectManager = reconnectManager;
+    public void setReconnectClient(ReconnectClient reconnectClient) {
+        this.reconnectClient = reconnectClient;
     }
 
     @Override
@@ -122,17 +123,16 @@ public class BoltHandler extends ChannelDuplexHandler {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
             Connection connection = Connection.getOrAddConnection(ctx.channel(), url);
-            System.out.println("sss" + connection);
             try {
                 if (serverSide) {
-                    // 直接关闭连接
+                    // 直接关闭连接,等待下次调用时重新建立连接
                     connection.close();
                 } else {
                     if (logger.isDebugEnabled()) {
-                        logger.debug("Send heartbeat to remote connection " + connection + " ,heartbeat times " + connection.attr(Connection.HEARTBEAT_COUNT).get());
+                        logger.debug("Send heartbeat to remote connection " + connection + ", heartbeat times " + connection.attr(Connection.HEARTBEAT_COUNT).get());
                     }
                     HeartbeatHandler handler = (HeartbeatHandler) protocol.getCommandHandler(CommandCodeEnum.HEARTBEAT_CMD);
-                    handler.setReconnectManager(reconnectManager);
+                    handler.setReconnectClient(reconnectClient);
                     handler.sendHeartbeat(connection);
                 }
             } finally {

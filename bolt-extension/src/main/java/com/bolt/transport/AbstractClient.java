@@ -36,15 +36,15 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  */
 public abstract class AbstractClient<K, P extends ChannelPool> extends AbstractEndpoint implements Client, ChannelPoolMap<K, P>, Iterable<Map.Entry<K, P>>, Closeable {
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
-    protected ReconnectManager reconnectManager;
+    protected ReconnectClient reconnectClient;
     private final ConcurrentMap<K, P> map = PlatformDependent.newConcurrentHashMap();
     private CommandFactory commandFactory;
 
     public AbstractClient(Codec codec, Protocol protocol) {
         super(codec, protocol);
         this.commandFactory = new CommandFactory();
-        this.reconnectManager = new ReconnectManager(this);
-        this.reconnectManager.startUp();
+        this.reconnectClient = new ReconnectClient(this);
+        this.reconnectClient.startUp();
     }
 
     public AbstractClient(boolean serverSide, Codec codec, Protocol protocol) {

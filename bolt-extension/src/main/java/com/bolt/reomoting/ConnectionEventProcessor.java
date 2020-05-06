@@ -1,4 +1,4 @@
-package com.bolt.transport;
+package com.bolt.reomoting;
 
 import com.bolt.reomoting.Connection;
 

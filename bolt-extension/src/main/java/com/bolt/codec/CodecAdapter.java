@@ -5,11 +5,9 @@ import com.bolt.common.buffer.ChannelBuffer;
 import com.bolt.common.command.RemotingCommand;
 import com.bolt.reomoting.Connection;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToByteEncoder;
-import io.netty.util.CharsetUtil;
 import lombok.Getter;
 
 import java.util.List;
@@ -36,9 +34,7 @@ public final class CodecAdapter {
         @Override
         protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
             ChannelBuffer buffer = new ChannelBuffer(in);
-            System.out.println("<" + in.toString(CharsetUtil.UTF_8) + ">");
             Connection connection = Connection.getOrAddConnection(ctx.channel(), url);
-            System.out.println(connection.getChannel());
             try {
                 Object msg = codec.decode(connection, buffer);
                 if (!Codec.DecodeResult.NEED_MORE_INPUT.equals(msg)) {
@@ -47,10 +43,6 @@ public final class CodecAdapter {
             } finally {
                 // 防止内存泄漏
                 Connection.removeChannelIfDisconnected(ctx.channel());
-
-                Connection.connectionMap.forEach((k, v) -> {
-                    System.out.println("k: " + k);
-                });
             }
         }
     }

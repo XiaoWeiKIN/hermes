@@ -19,15 +19,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @DateTime: 2020/5/5
  * @Description: TODO
  */
-public class ReconnectManager extends AbstractLifeCycle {
-    private static final Logger logger = LoggerFactory.getLogger(ReconnectManager.class);
+public class ReconnectClient extends AbstractLifeCycle {
+    private static final Logger logger = LoggerFactory.getLogger(ReconnectClient.class);
     private static final HashedWheelTimer IDLE_CHECK_TIMER = new HashedWheelTimer(
             new NamedThreadFactory("bolt-client-reconnect-timer", true), 1, TimeUnit.SECONDS);
     private LinkedBlockingQueue<ReconnectTimerTask> tasks = new LinkedBlockingQueue<ReconnectTimerTask>();
     private Client client;
     private Thread reconnectThread;
 
-    public ReconnectManager(Client client) {
+    public ReconnectClient(Client client) {
         this.client = client;
     }
 
