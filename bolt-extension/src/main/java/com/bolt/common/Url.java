@@ -14,7 +14,7 @@ public class Url {
     private Map<String, Object> parameters;
     private String host;
     private int port;
-    public static final String CONNECT_TIMEOUT_KEY = Constants.CONNECT_TIMEOUT_KEY;
+    public static final String CONNECT_TIMEOUT= Constants.CONNECT_TIMEOUT_KEY;
     public static final String SERIALIZATION_KEY = Constants.SERIALIZATION_KEY;
     public static final String MAX_CONNECTION = Constants.MAX_CONNECTION;
     public static final String MAX_PENDING_ACQUIRES = Constants.MAX_PENDING_ACQUIRES;

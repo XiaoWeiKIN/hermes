@@ -32,7 +32,7 @@ import java.io.InputStream;
  * @DateTime: 2020/4/5
  * @Description: TODO
  */
-public class BoltCodec extends AbstractCodec implements Codec {
+public class BoltCodec extends AbstractCodec {
     private static final Logger logger = LoggerFactory.getLogger(BoltCodec.class);
     protected static final int HEADER_LENGTH = 14;
     protected static final byte MAGIC = (byte) 0xad;

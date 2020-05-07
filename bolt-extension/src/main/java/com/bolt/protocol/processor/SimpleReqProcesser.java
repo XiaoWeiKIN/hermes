@@ -28,4 +28,9 @@ public class SimpleReqProcesser extends AbstractUserProcessorAdapter<ReqBody> {
 
         return "server success";
     }
+
+    @Override
+    public boolean processInIOThread() {
+        return false;
+    }
 }

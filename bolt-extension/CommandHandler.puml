@@ -1,0 +1,65 @@
+@startuml
+
+abstract AbstractCommandHandler
+abstract AbstractUserProcessorAdapter
+
+interface CommandHandler
+interface UserProcessor
+interface Protocol
+interface CommandCode
+
+Protocol <|..BoltProtocol
+
+CommandHandlerManager o-- BoltProtocol
+
+CommandHandlerManager*--CommandHandler
+
+CommandHandler <|.. AbstractCommandHandler
+AbstractCommandHandler <|-- GeneralCmdHandler
+AbstractCommandHandler <|-- HeartbeatHandler
+
+
+UserProcessor <|.. AbstractUserProcessorAdapter
+AbstractUserProcessorAdapter<|--SimpleReqProcesser
+UserProcessor*--GeneralCmdHandler
+
+CommandCode<|..CommandCodeEnum
+
+CommandCode o-- CommandHandler
+CommandCode o-- UserProcessor
+
+class GeneralCmdHandler {
+ConcurrentHashMap<String, UserProcessor<?>> processors
+}
+
+class BoltProtocol{
+CommandHandlerManager cmdHandlerManager
+ExecutorService executor
+}
+
+class CommandHandlerManager{
+Map<CommandCode, CommandHandler<?>> CMD_HANDLER_MAP
+}
+
+
+interface CommandHandler{
+CommandCode getCommandCode()
+void handle(RemotingContext ctx, T command)
+boolean handelInIOThread()
+}
+
+abstract class AbstractCommandHandler{
+handle(RemotingContext ctx, T command)
+abstract handleRequest(RequestCommand request)
+abstract handleResponse(ResponseCommand response)
+
+}
+
+
+
+enum CommandCodeEnum {
+GENERAL_CMD,
+HEARTBEAT_CMD;
+}
+
+@enduml

@@ -14,6 +14,7 @@ public class BoltServerTest {
         BoltServer server = new BoltServer();
         server.option(BoltServerOption.PORT,9091);
         server.addConnectionEventProcessor(ConnectionEventType.CONNECT,((connection) -> {
+            // 并发控制，连接统计等
         }));
         server.startUp();
     }

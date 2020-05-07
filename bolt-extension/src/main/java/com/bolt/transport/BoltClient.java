@@ -73,7 +73,7 @@ public class BoltClient extends AbstractClient<InetSocketAddress, FixedChannelPo
                 ? FixedChannelPool.AcquireTimeoutAction.NEW : FixedChannelPool.AcquireTimeoutAction.FAIL;
         BoltHandler clientHandler = new BoltHandler(getUrl(), getProtocol(), isServerSide());
         clientHandler.setConnectionEventListener(getConnectionEventListener());
-        clientHandler.setReconnectManager(reconnectManager);
+        clientHandler.setReconnectClient(reconnectClient);
         int heartbeatInterval = UrlUtils.getHeartbeat(url);
 
         return new FixedChannelPool(bootstrap.remoteAddress(key), new ChannelPoolHandler() {
