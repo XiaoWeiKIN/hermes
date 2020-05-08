@@ -125,7 +125,6 @@ public class BoltClient extends AbstractClient<InetSocketAddress, FixedChannelPo
     @Override
     public Connection ctreateConnectionIfAbsent(Url url) throws RemotingException {
         Channel ch = null;
-        setUrl(url);
         int connectTimeout = getConnectTimeout();
         bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
         InetSocketAddress connectAddresss = getConnectAddresss();

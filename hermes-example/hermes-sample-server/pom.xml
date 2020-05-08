@@ -3,27 +3,24 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>hermes</artifactId>
+        <artifactId>hermes-example</artifactId>
         <groupId>com.criss</groupId>
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>bolt-extension</artifactId>
+    <artifactId>hermes-server-sample</artifactId>
+
     <dependencies>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
+            <groupId>com.criss</groupId>
+            <artifactId>hemes-sample-api</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>hessian-lite</artifactId>
-            <version>${hessian.version}</version>
+            <groupId>com.criss</groupId>
+            <artifactId>hermes-spring-boot-starter</artifactId>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
-
 </project>

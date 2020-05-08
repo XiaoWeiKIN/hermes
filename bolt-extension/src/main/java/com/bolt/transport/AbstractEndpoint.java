@@ -20,7 +20,7 @@ import java.util.Map;
  * @Description: TODO
  */
 public abstract class AbstractEndpoint extends AbstractLifeCycle implements Endpoint, Configurable {
-    private static final Logger logger = LoggerFactory.getLogger(BoltServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractEndpoint.class);
     protected final BoltOptions options = new BoltOptions();
     private Codec codec;
     private Protocol protocol;
@@ -65,11 +65,15 @@ public abstract class AbstractEndpoint extends AbstractLifeCycle implements Endp
         return protocol;
     }
 
-    protected void setUrl(Url url) {
+    protected void init(Url url) {
         url.addParameters(options(BoltRemotingOption.class));
         if (isServerSide()) {
             url.addParameters(options(BoltServerOption.class));
         } else {
+            if (url.getHost() == null) {
+                url.setHost(option(BoltClientOption.HOST));
+                url.setPort(option(BoltClientOption.PORT));
+            }
             url.addParameters(options(BoltClientOption.class));
         }
         this.url = url;
@@ -83,14 +87,14 @@ public abstract class AbstractEndpoint extends AbstractLifeCycle implements Endp
     public WriteBufferWaterMark initWriteBufferWaterMark() {
         Integer lowWaterMark = this.option(BoltGenericOption.NETTY_BUFFER_LOW_WATER_MARK);
         Integer highWaterMark = this.option(BoltGenericOption.NETTY_BUFFER_HIGH_WATER_MARK);
-        String prefix = isServerSide() ? "[server side]" : "[client side]";
+        String prefix = isServerSide() ? "[bolt server side]" : "[bolt client side]";
         if (lowWaterMark > highWaterMark) {
             throw new IllegalArgumentException(
-                    String.format(prefix + " bolt netty high water mark {%s}" +
+                    String.format(prefix + " netty high water mark {%s}" +
                                     " should not be smaller than low water mark {%s} bytes)",
                             highWaterMark, lowWaterMark));
         } else {
-            logger.info(prefix + " bolt netty low water mark is {} bytes, high water mark is {} bytes",
+            logger.info(prefix + " netty low water mark is {} bytes, high water mark is {} bytes",
                     lowWaterMark, highWaterMark);
         }
         return new WriteBufferWaterMark(lowWaterMark, highWaterMark);

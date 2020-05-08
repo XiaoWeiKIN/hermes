@@ -14,7 +14,7 @@ public class Url {
     private Map<String, Object> parameters;
     private String host;
     private int port;
-    public static final String CONNECT_TIMEOUT= Constants.CONNECT_TIMEOUT_KEY;
+    public static final String CONNECT_TIMEOUT = Constants.CONNECT_TIMEOUT_KEY;
     public static final String SERIALIZATION_KEY = Constants.SERIALIZATION_KEY;
     public static final String MAX_CONNECTION = Constants.MAX_CONNECTION;
     public static final String MAX_PENDING_ACQUIRES = Constants.MAX_PENDING_ACQUIRES;
@@ -66,6 +66,14 @@ public class Url {
 
     public String getHost() {
         return this.host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
     @Override
@@ -154,7 +162,9 @@ public class Url {
         }
 
         public Url build() {
-            return new Url(this.host, this.port, this.parameters);
+            Url url = new Url(this.host, this.port);
+            url.addParameters(this.parameters);
+            return url;
         }
     }
 }

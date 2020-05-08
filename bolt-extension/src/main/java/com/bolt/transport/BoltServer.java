@@ -50,7 +50,7 @@ public class BoltServer extends AbstractServer<BoltServer> {
         bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("BoltServerBoss", false));
         workerGroup = new NioEventLoopGroup(this.option(BoltGenericOption.IO_THREADS), new DefaultThreadFactory("BoltServerWorker", true));
         port = this.option(BoltServerOption.PORT);
-        setUrl(new Url(NetUtils.getLocalHost(), port));
+        init(new Url(NetUtils.getLocalHost(), port));
         final BoltHandler serverHandler = new BoltHandler(getUrl(), getProtocol(), isServerSide());
         int idleTimeout = UrlUtils.getIdleTimeout(getUrl());
         serverHandler.setConnectionEventListener(getConnectionEventListener());

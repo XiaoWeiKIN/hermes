@@ -16,4 +16,7 @@ public interface Client extends Endpoint {
     Connection ctreateConnectionIfAbsent(Url url) throws RemotingException;
 
     <T> T request(Url url, Object request) throws RemotingException;
+
+    <T> T request(Object request) throws RemotingException;
+
 }

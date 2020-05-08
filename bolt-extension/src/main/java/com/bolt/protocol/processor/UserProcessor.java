@@ -22,5 +22,5 @@ public interface UserProcessor<T> {
 
     boolean processInIOThread();
 
-    Object handleRequest(T data) throws Exception;
+    Object handleRequest(T request) throws Exception;
 }

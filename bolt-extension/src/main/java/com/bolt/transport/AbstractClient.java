@@ -6,6 +6,7 @@ import com.bolt.common.command.RequestCommand;
 import com.bolt.common.Url;
 import com.bolt.common.command.CommandFactory;
 import com.bolt.common.exception.RemotingException;
+import com.bolt.config.BoltClientOption;
 import com.bolt.reomoting.Connection;
 import com.bolt.protocol.Protocol;
 import com.bolt.reomoting.FutureAdapter;
@@ -209,8 +210,18 @@ public abstract class AbstractClient<K, P extends ChannelPool> extends AbstractE
         return connectTimeout;
     }
 
+
+    @Override
+    public <T> T request(Object request) throws RemotingException {
+        Url url = Url.builder().host(option(BoltClientOption.HOST))
+                .port(option(BoltClientOption.PORT))
+                .build();
+        return request(url, request);
+    }
+
     @Override
     public <T> T request(Url url, Object msg) throws RemotingException {
+        init(url);
         Connection connection = ctreateConnectionIfAbsent(url);
         RequestCommand request = commandFactory.createRequest(msg);
         if (UrlUtils.isOneway(url)) {

@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.emptyList;
-import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 
 /**
  * IP and Port Helper for RPC

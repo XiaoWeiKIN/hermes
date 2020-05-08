@@ -4,6 +4,7 @@ import com.bolt.common.command.CommandCode;
 import com.bolt.common.enums.CommandCodeEnum;
 import com.bolt.util.NamedThreadFactory;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.concurrent.*;
 
 /**
@@ -32,5 +33,11 @@ public abstract class AbstractUserProcessorAdapter<T> implements UserProcessor<T
 
     public void setExecutor(ExecutorService executor) {
         this.executor = executor;
+    }
+
+    @Override
+    public String interest() {
+        Class<T> interestClazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        return interestClazz.getName();
     }
 }
