@@ -30,7 +30,7 @@ public class UrlTest {
     @Test
     public void test_url_equals() {
         Map<String, Object> option = new HashMap<String, Object>();
-        option.put(Url.SERIALIZATION_KEY, Constants.DEFAULT_REMOTING_SERIALIZATION);
+        option.put(Url.SERIALIZATION, Constants.DEFAULT_REMOTING_SERIALIZATION);
         Url urlA = Url.builder().port(80).host("123.0.0.1")
                 .setParameters(option).build();
 
@@ -50,7 +50,7 @@ public class UrlTest {
     @Test
     public void test_url_add() {
         Map<String, Object> option = new HashMap<String, Object>();
-        option.put(Url.SERIALIZATION_KEY, "hessian2");
+        option.put(Url.SERIALIZATION, "hessian2");
         option.put(Url.MAX_CONNECTION, 10);
 
         Url url = Url.builder()

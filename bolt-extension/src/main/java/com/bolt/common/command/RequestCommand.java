@@ -26,8 +26,18 @@ public class RequestCommand extends AbstractCommand {
         super(newId(), cmdCode);
     }
 
+    @Override
+    public String toString() {
+        return "RequestCommand{id=" + getId() +
+                " cmdCode=" + getCmdCode() +
+                " isHeartBeat=" + isHeartbeat() + "}";
+    }
+
     private static int newId() {
         // getAndIncrement() When it grows to MAX_VALUE, it will grow to MIN_VALUE, and the negative can be used as ID
         return INVOKE_ID.getAndIncrement();
     }
+
+
+
 }

@@ -71,6 +71,7 @@ public class BoltCodec extends AbstractCodec {
         // checkPlayLoad
         int len = Bytes.bytes2int(header, 10);
         checkPlayLoad(connection, len);
+        // 判断是否拆包
         int tt = len + HEADER_LENGTH;
         if (readable < tt) {
             return DecodeResult.NEED_MORE_INPUT;
@@ -104,6 +105,10 @@ public class BoltCodec extends AbstractCodec {
                     res.setInvocation(inv);
                 } else {
                     res.setErrorMessage(input.readUTF());
+                    // 不会读取
+                    DecodeableInvocation inv = new DecodeableInvocation(res,
+                            new UnsafeByteArrayInputStream(readMessageData(is)), prto);
+                    res.setInvocation(inv);
                 }
             } catch (Throwable t) {
                 logger.warn("Decode response failed: {}", t.getMessage(), t);

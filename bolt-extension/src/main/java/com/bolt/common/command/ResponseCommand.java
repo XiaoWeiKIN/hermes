@@ -20,4 +20,13 @@ public class ResponseCommand extends AbstractCommand {
     public ResponseCommand(int id, CommandCode cmdCode) {
         super(id, cmdCode);
     }
+
+    @Override
+    public String toString() {
+
+        return "ResponseCommand{status=" + status +
+                " id=" + getId() +
+                " cmdCode=" + getCmdCode() +
+                " isHeartBeat" + isHeartbeat() + "}";
+    }
 }

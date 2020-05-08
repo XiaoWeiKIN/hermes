@@ -228,7 +228,7 @@ public abstract class AbstractClient<K, P extends ChannelPool> extends AbstractE
             connection.writeAndFlush(request);
             return null;
         }
-        int timeout = UrlUtils.getTimeout(url);
+        int timeout = UrlUtils.getTimeout(url, option(BoltClientOption.TIMEOUT));
         FutureAdapter<Object> future = connection.send(request, timeout);
         if (UrlUtils.isAsync(url)) {
             return (T) future;

@@ -26,6 +26,7 @@ public class HermesProperties {
         private String host = "127.0.0.1";
         private int port = 8091;
         private int connectTimeout = 3000;
+        private int timeout =3000;
         private int heartbeatInterval = 15 * 1000;
         private int maxConnection = 1;
         private int maxPendingAcquires = Integer.MAX_VALUE;

@@ -82,7 +82,7 @@ public class UrlUtils {
         return idleTimeout;
     }
 
-    public static int getTimeout(Url url) {
-        return url.getParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
+    public static int getTimeout(Url url,Integer timeout) {
+        return url.getParameter(Constants.TIMEOUT_KEY, timeout);
     }
 }

@@ -42,6 +42,7 @@ public class HermesAutoConfiguration {
                 .option(BoltGenericOption.TCP_SO_KEEPALIVE, properties.isTcpSoKeepalive())
                 .option(BoltClientOption.HEARTBEATINTERVAL, pc.getHeartbeatInterval())
                 .option(BoltClientOption.CONNECT_TIMEOUT, pc.getConnectTimeout())
+                .option(BoltClientOption.TIMEOUT, pc.getTimeout())
                 .option(BoltClientOption.MAX_CONNECTION, pc.getMaxConnection())
                 .option(BoltClientOption.ACQUIRE_TIMEOUT, pc.getAcquireTimeout())
                 .option(BoltClientOption.ACQUIRE_TIMEOUT_ACTION, pc.getAcquireTimeoutAction())

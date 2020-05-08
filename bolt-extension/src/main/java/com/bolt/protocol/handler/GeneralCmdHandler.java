@@ -72,15 +72,18 @@ public class GeneralCmdHandler extends AbstractCommandHandler {
     public void handle(RemotingContext ctx, RemotingCommand cmd) throws RemotingException {
         UserProcessor processor = null;
         ExecutorService executor = null;
-        DecodeableInvocation inv = (DecodeableInvocation) cmd.getInvocation();
-        // IO thread decode className
-        inv.decodeClassName();
+
+        Optional<Invocation> invocation = Optional.ofNullable(cmd.getInvocation());
+
+        invocation.ifPresent(inv->{
+            DecodeableInvocation dinv =(DecodeableInvocation)inv;
+            dinv.decodeClassName();
+        });
 
         if (cmd instanceof RequestCommand) {
-            processor = processors.get(inv.getClassName());
+            processor = processors.get(invocation.get().getClassName());
             if (processor == null) {
-                String errorMsg = "Registered UserProcessers to " + getClass().getSimpleName()
-                        + " handler, but no UserProcesser found by interest: " + inv.getClassName();
+                String errorMsg = "No UserProcesser found by interest: " + invocation.get().getClassName()+" from GeneralCmdHandler";
                 throw new RemotingException(ctx.getConnection(), errorMsg);
             }
             executor = processor.processInIOThread()

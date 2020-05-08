@@ -81,6 +81,10 @@ public class HeartbeatHandler extends AbstractCommandHandler {
                     return;
                 }
             }));
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Send heartbeat to remote connection " + connection + ", heartbeat times " + connection.attr(Connection.HEARTBEAT_COUNT).get());
+            }
         }
     }
 

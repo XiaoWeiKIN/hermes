@@ -17,9 +17,12 @@ public class BoltClientOption<T> extends BoltRemotingOption<T> {
 
     // <-----空闲检测------>
     public static final BoltOption<Integer> HEARTBEATINTERVAL = valueOf(BoltClientOption.class, Constants.HEARTBEAT_KEY, Constants.DEFAULT_HEARTBEAT);
+    // 全局请求超时时间
+    public static final BoltOption<Integer> TIMEOUT = valueOf(BoltClientOption.class, Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
+    // 全局连接超时时间
+    public static final BoltOption<Integer> CONNECT_TIMEOUT = valueOf(BoltClientOption.class, Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
 
     // <-----连接池配置------>
-    public static final BoltOption<Integer> CONNECT_TIMEOUT = valueOf(BoltClientOption.class, Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     public static final BoltOption<Integer> MAX_CONNECTION = valueOf(BoltClientOption.class, Constants.MAX_CONNECTION, Constants.DEFAULT_MAX_CONNECTION);
     public static final BoltOption<Integer> MAX_PENDING_ACQUIRES = valueOf(BoltClientOption.class, Constants.MAX_PENDING_ACQUIRES, Constants.DEFAULT_MAX_PENDING_ACQUIRES);
     public static final BoltOption<Long> ACQUIRE_TIMEOUT = valueOf(BoltClientOption.class, Constants.ACQUIRE_TIMEOUT, Constants.DEFAULT_ACQUIRE_TIMEOUT);

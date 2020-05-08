@@ -58,6 +58,10 @@ public class BoltHandler extends ChannelDuplexHandler {
         protocol.getDefaultExecutor().execute(() -> {
             eventListener.onEvent(ConnectionEventType.CONNECT, connection);
         });
+
+        if (logger.isInfoEnabled()) {
+            logger.info("The connection of " + connection.getLocalAddress() + " -> " + connection.getRemoteAddress() + " is established.");
+        }
     }
 
     @Override
@@ -67,6 +71,10 @@ public class BoltHandler extends ChannelDuplexHandler {
             protocol.getDefaultExecutor().execute(() -> {
                 eventListener.onEvent(ConnectionEventType.CLOSE, connection);
             });
+
+            if (logger.isInfoEnabled()) {
+                logger.info("The connection of " + connection.getLocalAddress() + " -> " + connection.getRemoteAddress() + " is disconnected.");
+            }
         } finally {
             Connection.removeChannelIfDisconnected(ctx.channel());
         }
@@ -91,7 +99,7 @@ public class BoltHandler extends ChannelDuplexHandler {
                 connection.sendResponseIfNecessary(request, response);
                 return;
             }
-            throw new ExecutionException(command, connection, t.getCause());
+            throw new ExecutionException(command, connection, t.getMessage());
         } finally {
             Connection.removeChannelIfDisconnected(ctx.channel());
         }
@@ -110,10 +118,9 @@ public class BoltHandler extends ChannelDuplexHandler {
                     response.setStatus(ResponseStatus.SERVER_EXCEPTION);
                     response.setErrorMessage(ObjectUtils.toString(e));
                     connection.sendResponseIfNecessary(request, response);
-                    return;
                 }
             }
-            logger.error(ObjectUtils.toString(cause), cause);
+            logger.warn(ObjectUtils.toString(cause));
         } finally {
             Connection.removeChannelIfDisconnected(ctx.channel());
         }
@@ -128,9 +135,7 @@ public class BoltHandler extends ChannelDuplexHandler {
                     // 直接关闭连接,等待下次调用时重新建立连接
                     connection.close();
                 } else {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Send heartbeat to remote connection " + connection + ", heartbeat times " + connection.attr(Connection.HEARTBEAT_COUNT).get());
-                    }
+
                     HeartbeatHandler handler = (HeartbeatHandler) protocol.getCommandHandler(CommandCodeEnum.HEARTBEAT_CMD);
                     handler.setReconnectClient(reconnectClient);
                     handler.sendHeartbeat(connection);

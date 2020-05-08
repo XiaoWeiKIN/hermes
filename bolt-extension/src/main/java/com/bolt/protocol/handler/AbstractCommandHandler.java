@@ -11,6 +11,7 @@ import com.bolt.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -108,10 +109,10 @@ public abstract class AbstractCommandHandler<T extends RemotingCommand> implemen
     public abstract <T> T handleRequest(RemotingContext ctx, RequestCommand request) throws Exception;
 
     protected void handleResponse(RemotingContext ctx, ResponseCommand response) {
-        if(response.isHeartbeat()){
-          if(logger.isDebugEnabled()){
-              logger.debug("Received heartbeat response from remote connection " + ctx.getConnection());
-          }
+        if (response.isHeartbeat()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Received heartbeat response from remote connection " + ctx.getConnection());
+            }
         }
         Connection connection = ctx.getConnection();
         DefaultFuture.received(connection, response);

@@ -239,7 +239,7 @@ public class DefaultFuture implements ResponseFuture {
     private String getTimeoutMessage(boolean scan) {
         long nowTimestamp = System.currentTimeMillis();
         return (request.getCmdCode().equals(CommandCodeEnum.HEARTBEAT_CMD) ? "Heartbeat " : ("CommandCode " + request.getCmdCode()))
-                + (sent > 0 ? "Waiting server-side response timeout" : "Sending request timeout in client-side")
+                + (sent > 0 ? " Waiting server-side response timeout" : " Sending request timeout in client-side")
                 + (scan ? " by scan timer" : "") + ". start time: "
                 + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date(start))) + ", end time: "
                 + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date())) + ","

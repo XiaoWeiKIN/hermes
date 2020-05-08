@@ -22,8 +22,21 @@ hermes是一款基于Netty的可以支持百万级别的并发连接的高性能
 - 使用SPI扩展点加载，扩展性强
 - 鉴权
 
+## 压力测试
+
+物理环境：
+- MacOS
+- CPU: 4核 2.4GHz Intel Core i5
+- 内存：8g 可用内存2g
+
+以下为同步调用压力测试结果，由于实际限制只能简单进行压测。
+
+![](https://user-gold-cdn.xitu.io/2020/5/8/171f3e97adb5caa4?w=1850&h=1342&f=png&s=231492)
+
 
 ## 1.使用方式
+
+- 可以直接无缝结合springboot使用，使用示例请参考hermes-example项目
 
 - 同步调用
 ```

@@ -15,7 +15,8 @@ public class Url {
     private String host;
     private int port;
     public static final String CONNECT_TIMEOUT = Constants.CONNECT_TIMEOUT_KEY;
-    public static final String SERIALIZATION_KEY = Constants.SERIALIZATION_KEY;
+    public static final String TIMEOUT = Constants.TIMEOUT_KEY;
+    public static final String SERIALIZATION= Constants.SERIALIZATION_KEY;
     public static final String MAX_CONNECTION = Constants.MAX_CONNECTION;
     public static final String MAX_PENDING_ACQUIRES = Constants.MAX_PENDING_ACQUIRES;
     public static final String ACQUIRE_TIMEOUT = Constants.ACQUIRE_TIMEOUT;
