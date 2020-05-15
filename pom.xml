@@ -12,7 +12,6 @@
         <module>bolt-extension</module>
         <module>hermes-spring-boot-starter</module>
         <module>hermes-example</module>
-        <module>hemes-sample-api</module>
     </modules>
     <dependencyManagement>
         <dependencies>
